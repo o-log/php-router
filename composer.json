@@ -2,7 +2,7 @@
     "name": "o-log/php-router",
     "autoload" : {
 	"psr-0" : {
-	    "OLOG" : "",
+	    "OLOG" : ""
 	}
     }
 }
