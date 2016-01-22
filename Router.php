@@ -1,6 +1,6 @@
 <?php
 
-namespace Cebera;
+namespace OLOG;
 
 class Router
 {
