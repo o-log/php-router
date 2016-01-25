@@ -12,7 +12,7 @@ class Router
 
     static public function matchGroup($url_regexp)
     {
-        $current_url = \Cebera\Helpers::uri_no_getform();
+        $current_url = self::uri_no_getform();
 
         if (!preg_match($url_regexp, $current_url)) {
             return false;
@@ -38,15 +38,18 @@ class Router
 
     protected static function getDefaultCacheLifetime()
     {
+      /*
         $has_admin_cookie = false;
 
         if ($has_admin_cookie) {
             $cache_seconds_for_headers = 0;
         } else {
-            $cache_seconds_for_headers = \Cebera\ConfWrapper::value('cache_life_time', 60);
+            $cache_seconds_for_headers = \OLOG\ConfWrapper::value('cache_life_time', 60);
         }
 
         return $cache_seconds_for_headers;
+      */
+      return 60;
     }
 
     /**
@@ -61,7 +64,7 @@ class Router
         list($controller_class_name, $action_method_name) = $callback_arr;
 
         $matches_arr = array();
-        $current_url = \Cebera\Helpers::uri_no_getform();
+        $current_url = self::uri_no_getform();
 
         if (!preg_match($url_regexp, $current_url, $matches_arr)) {
             return;
@@ -76,7 +79,7 @@ class Router
         if (is_null($cache_seconds_for_headers)) {
             $cache_seconds_for_headers = self::getDefaultCacheLifetime();
         }
-        \Cebera\Helpers::cacheHeaders($cache_seconds_for_headers);
+        self::cacheHeaders($cache_seconds_for_headers);
 
         $decoded_matches_arr = array();
         foreach ($matches_arr as $arg_value) {
@@ -103,4 +106,25 @@ class Router
         self::$current_controller_class_name = null;
     }
 
+    static public function cacheHeaders($seconds = 0)
+    {
+      if ($seconds) {
+	header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $seconds) . ' GMT');
+	header('Cache-Control: max-age=' . $seconds . ', public');
+      } else {
+	header('Expires: ' . gmdate('D, d M Y H:i:s', date('U') - 86400) . ' GMT');
+	header('Cache-Control: no-cache');
+      }
+
+    }
+
+    static public function uri_no_getform()
+    {
+      $request_uri = array_key_exists('REQUEST_URI', $_SERVER) ? $_SERVER['REQUEST_URI'] : '';
+      $parts = explode('?', $request_uri);
+      $uri_no_getform = $parts[0];
+      return $uri_no_getform;
+    }
+
+    
 }
