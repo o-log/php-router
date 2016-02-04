@@ -137,7 +137,7 @@ class Router
 
         // TODO: get from method name
         list($controller_class_name, $action_method_name) = explode('::', $method);
-        self::$current_action_method_name = $action_method_name;
+        self::$current_action_method_name = $method;
         self::$current_controller_class_name = $controller_class_name;
         //self::$current_controller_obj = new $controller_class_name();
 
