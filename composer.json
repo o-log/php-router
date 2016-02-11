@@ -1,8 +1,9 @@
 {
     "name": "o-log/php-router",
     "autoload" : {
-	"psr-0" : {
-	    "OLOG" : ""
-	}
+      "psr-0" : {
+	    "OLOG" : "",
+        "PHPRouterDemo" : ""
+	  }
     }
 }

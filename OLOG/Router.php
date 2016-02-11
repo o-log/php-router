@@ -6,6 +6,9 @@ class Router
 {
     const CONTINUE_ROUTING = 'CONTINUE_ROUTING';
 
+    const GET_URL = 'GET_URL';
+    const GET_METHOD = 'GET_METHOD';
+
     static public $current_controller_obj = null; // текущий (т.е. послдений созданный) объект контроллера
     static protected $current_action_method_name = ''; // имя функции текущего (т.е. последнего вызванного) экшена (без класса)
     static protected $current_controller_class_name = ''; // имя класса текущего (т.е. последнего вызванного) контроллера
