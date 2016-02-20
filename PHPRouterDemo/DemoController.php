@@ -22,14 +22,14 @@ class DemoController
     }
     */
 
-    static public function mainPageAction2($_mode){
+    static public function mainPageAction($_mode){
         if ($_mode == \OLOG\Router::GET_URL) return '/';
         if ($_mode == \OLOG\Router::GET_METHOD) return __METHOD__;
 
         MainPageTemplate::render();
     }
 
-    static public function nodeAction2($_mode, $node_id = '(\d+)'){
+    static public function nodeAction($_mode, $node_id = '(\d+)'){
         if ($_mode == \OLOG\Router::GET_URL) return '/node/' . $node_id;
         if ($_mode == \OLOG\Router::GET_METHOD) return __METHOD__;
 

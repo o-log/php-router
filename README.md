@@ -4,7 +4,7 @@
 
     class DemoController
     {
-        static public function nodeAction2($_mode, $node_id = '(\d+)'){
+        static public function nodeAction($_mode, $node_id = '(\d+)'){
             if ($_mode == \OLOG\Router::GET_URL) return '/node/' . $node_id;
             if ($_mode == \OLOG\Router::GET_METHOD) return __METHOD__;
     
@@ -22,7 +22,7 @@
 
 Роутинг для этого экшена в точке входа (в index.php):
   
-    Router::match3(\PHPRouterDemo\DemoController::nodeAction2(Router::GET_METHOD));
+    Router::match3(\PHPRouterDemo\DemoController::nodeAction(Router::GET_METHOD));
     
 Здесь мы получаем callable экшена и отдаем его роутеру (почему не указать callable явно, избежав лишнего вызова экшена? См. ниже).
 
