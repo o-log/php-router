@@ -14,6 +14,11 @@ class Router
     static protected $current_action_method_name = ''; // имя функции текущего (т.е. последнего вызванного) экшена (без класса)
     static protected $current_controller_class_name = ''; // имя класса текущего (т.е. последнего вызванного) контроллера
 
+    /**
+     * Простой метод проверки, соответствует ли запрошенный урл указанной маске. Может использоваться для группировки роутов.
+     * @param $url_regexp
+     * @return bool
+     */
     static public function matchGroup($url_regexp)
     {
         $current_url = self::uri_no_getform();
@@ -57,6 +62,8 @@ class Router
     }
 
     /**
+     * Простой роутинг, когда маска урла передается напрямую в роутер. Экшен указывается в виде стандартного callable.
+     * Здесь контроллер инстанцируется, экшены не статические.
      * - Декодирует все параметры, полученные из урла.
      * - Экшен должен вернуть CONTINUE_ROUTING если не смог обработать запрос (не подошел). Если обработал - может ничего не возвращать.
      * @param $url_regexp
@@ -110,7 +117,12 @@ class Router
         self::$current_controller_class_name = null;
     }
 
-    static public function match2($route_arr, $cache_seconds_for_headers = null)
+    /**
+     * @deprecated этот метод не нужно использовать в новом коде, вместо него match3()
+     * @param $route_arr
+     * @param null $cache_seconds_for_headers
+     */
+    static public function match2(callable $route_arr, $cache_seconds_for_headers = null)
     {
         list($method, $url_regexp) = $route_arr;
         $url_regexp = '@^' . $url_regexp . '$@';
@@ -152,7 +164,7 @@ class Router
             exit;
         }
 
-        if ($action_result != self::CONTINUE_ROUTING) {
+        if ($action_result !== self::CONTINUE_ROUTING) {
             exit;
         }
 
@@ -162,34 +174,60 @@ class Router
         self::$current_controller_class_name = null;
     }
 
-    static public function match3($method, $cache_seconds_for_headers = null)
+    /**
+     * Сложный вариант роутинга - маска урла хранится в экшене и получается из него. Экшен здесь передается как callable.
+     * Здесь контроллер не инстанцируется, методы экшенов статические.
+     * @param callable $method
+     * @param null $cache_seconds_for_headers
+     * @return bool|mixed если маска адреса не матчится - возвращает false, иначе - возвращает то, что вернул экшен. это сделано для тестов.
+     */
+    static public function match3(callable $method, $cache_seconds_for_headers = null, $return_action_result_instead_of_exit = false)
     {
+        //
+        // получение маски адреса экшена вызовом самого экшена
+        //
+
         $url_str = call_user_func_array($method, array(self::GET_URL));
         $url_regexp = '@^' . $url_str . '$@';
+
+        //
+        // проверка соответствия запрошенного адреса маске экшена и извлечение параметров экшена
+        //
 
         $matches_arr = array();
         $current_url = self::uri_no_getform();
 
         if (!preg_match($url_regexp, $current_url, $matches_arr)) {
-            return;
+            return false;
         }
 
         if (count($matches_arr)) {
             array_shift($matches_arr); // убираем первый элемент массива - содержит всю сматченую строку
         }
 
-        // кэширование страницы по умолчанию
-        if (is_null($cache_seconds_for_headers)) {
+        //
+        // установка хидеров кэширования
+        //
+
+        if (is_null($cache_seconds_for_headers)) { // кэширование страницы по умолчанию
             $cache_seconds_for_headers = self::getDefaultCacheLifetime();
         }
+
         self::cacheHeaders($cache_seconds_for_headers);
+
+        //
+        // декодирование параметров экшена, полученных из урла
+        //
 
         $decoded_matches_arr = array();
         foreach ($matches_arr as $arg_value) {
             $decoded_matches_arr[] = urldecode($arg_value);
         }
 
-        // TODO: get from method name
+        //
+        // сохранение текущего контроллера и экшена, чтобы другой код мог их использовать для проверки какой экшен работает или для получения контекста с помощью методов контроллера
+        //
+
         list($controller_class_name, $action_method_name) = explode('::', $method);
         self::$current_action_method_name = $method;
         self::$current_controller_class_name = $controller_class_name;
@@ -197,39 +235,54 @@ class Router
         $action_params_arr = array_merge(array(self::EXECUTE_ACTION), $decoded_matches_arr); // добавляем mode для экшена
         $action_result = call_user_func_array($method, $action_params_arr);
 
+        //
+        // сбрасываем текущий контроллер - он больше не актуален
+        //
+
+        //self::$current_controller_obj = null;
+        self::$current_action_method_name = null;
+        self::$current_controller_class_name = null;
+
+        //
+        // проверка результата экшена - нужно ли завершать работу
+        //
+
+        /*
         if ($action_result == null) {
             exit;
         }
+        */
 
-        if ($action_result != self::CONTINUE_ROUTING) {
-            exit;
+        if ($action_result === self::CONTINUE_ROUTING) {
+            return $action_result;
+
         }
 
-        // сбрасываем текущий контроллер - он больше не актуален
-        self::$current_controller_obj = null;
-        self::$current_action_method_name = null;
-        self::$current_controller_class_name = null;
+        if ($return_action_result_instead_of_exit) {
+            return $action_result;
+        }
+
+        exit;
     }
 
     static public function cacheHeaders($seconds = 0)
     {
-      if ($seconds) {
-	header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $seconds) . ' GMT');
-	header('Cache-Control: max-age=' . $seconds . ', public');
-      } else {
-	header('Expires: ' . gmdate('D, d M Y H:i:s', date('U') - 86400) . ' GMT');
-	header('Cache-Control: no-cache');
-      }
-
+        if (php_sapi_name() !== "cli") {
+            if ($seconds) {
+                header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $seconds) . ' GMT');
+                header('Cache-Control: max-age=' . $seconds . ', public');
+            } else {
+                header('Expires: ' . gmdate('D, d M Y H:i:s', date('U') - 86400) . ' GMT');
+                header('Cache-Control: no-cache');
+            }
+        }
     }
 
     static public function uri_no_getform()
     {
-      $request_uri = array_key_exists('REQUEST_URI', $_SERVER) ? $_SERVER['REQUEST_URI'] : '';
-      $parts = explode('?', $request_uri);
-      $uri_no_getform = $parts[0];
-      return $uri_no_getform;
+        $request_uri = array_key_exists('REQUEST_URI', $_SERVER) ? $_SERVER['REQUEST_URI'] : '';
+        $parts = explode('?', $request_uri);
+        $uri_no_getform = $parts[0];
+        return $uri_no_getform;
     }
-
-    
 }
