@@ -265,6 +265,87 @@ class Router
         exit;
     }
 
+    static public function matchClass($action_class_name, $cache_seconds_for_headers = null, $return_action_result_instead_of_exit = false)
+    {
+
+        // TODO: check action class interfaces
+
+        //
+        // получение маски адреса экшена вызовом самого экшена
+        //
+
+        $url_str = $action_class_name::getUrl();
+        $url_regexp = '@^' . $url_str . '$@';
+
+        //
+        // проверка соответствия запрошенного адреса маске экшена и извлечение параметров экшена
+        //
+
+        $matches_arr = array();
+        $current_url = self::uri_no_getform();
+
+        if (!preg_match($url_regexp, $current_url, $matches_arr)) {
+            return false;
+        }
+
+        if (count($matches_arr)) {
+            array_shift($matches_arr); // убираем первый элемент массива - содержит всю сматченую строку
+        }
+
+        //
+        // установка хидеров кэширования
+        //
+
+        if (is_null($cache_seconds_for_headers)) { // кэширование страницы по умолчанию
+            $cache_seconds_for_headers = self::getDefaultCacheLifetime();
+        }
+
+        self::cacheHeaders($cache_seconds_for_headers);
+
+        //
+        // декодирование параметров экшена, полученных из урла
+        //
+
+        $decoded_matches_arr = array();
+        foreach ($matches_arr as $arg_value) {
+            $decoded_matches_arr[] = urldecode($arg_value);
+        }
+
+        //
+        // TODO: сохранение текущего контроллера и экшена, чтобы другой код мог их использовать для проверки какой экшен работает или для получения контекста с помощью методов контроллера
+        //
+
+        //list($controller_class_name, $action_method_name) = explode('::', $method);
+        //self::$current_action_method_name = $method;
+        //self::$current_controller_class_name = $controller_class_name;
+
+        $action_params_arr = $decoded_matches_arr;
+        $action_result = call_user_func_array(array($action_class_name, 'action'), $action_params_arr);
+
+        //
+        // TODO: сбрасываем текущий контроллер - он больше не актуален
+        //
+
+        //self::$current_controller_obj = null;
+        //self::$current_action_method_name = null;
+        //self::$current_controller_class_name = null;
+
+        //
+        // проверка результата экшена - нужно ли завершать работу
+        //
+
+        if ($action_result === self::CONTINUE_ROUTING) {
+            return $action_result;
+
+        }
+
+        if ($return_action_result_instead_of_exit) {
+            return $action_result;
+        }
+
+        exit;
+    }
+
     static public function cacheHeaders($seconds = 0)
     {
         if (php_sapi_name() !== "cli") {
@@ -276,6 +357,7 @@ class Router
                 header('Cache-Control: no-cache');
             }
         }
+
     }
 
     static public function uri_no_getform()

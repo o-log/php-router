@@ -2,6 +2,9 @@
 
 class RouterTest extends PHPUnit_Framework_TestCase
 {
+
+    // TODO: test matchClass
+
     static public function mainPageAction($_mode){
         if ($_mode == \OLOG\Router::GET_URL) return '/';
         if ($_mode == \OLOG\Router::GET_METHOD) return __METHOD__;
