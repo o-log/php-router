@@ -2,13 +2,13 @@
 
 namespace PHPRouterDemo;
 
-class NodeAction
+class DemoNodeAction
 {
     static public function getUrl($node_id = '(\d+)'){
-        return '/class_actions/node/' . $node_id;
+        return '/node/' . $node_id;
     }
     
     static public function action($node_id){
-        NodePageTemplate::render($node_id);
+        DemoNodePageTemplate::render($node_id);
     }
 }
