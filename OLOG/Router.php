@@ -14,6 +14,9 @@ class Router
     static protected $current_action_method_name = ''; // имя функции текущего (т.е. последнего вызванного) экшена (без класса)
     static protected $current_controller_class_name = ''; // имя класса текущего (т.е. последнего вызванного) контроллера
 
+    // TODO: describe, add getter+setter
+    static $url_prefix = '';
+
     /**
      * Простой метод проверки, соответствует ли запрошенный урл указанной маске. Может использоваться для группировки роутов.
      * @param $url_regexp
@@ -274,7 +277,8 @@ class Router
         // получение маски адреса экшена вызовом самого экшена
         //
 
-        $url_str = $action_class_name::getUrl();
+        // url_perfix позволяет работать в папке
+        $url_str = self::$url_prefix . $action_class_name::getUrl();
         $url_regexp = '@^' . $url_str . '$@';
 
         //
