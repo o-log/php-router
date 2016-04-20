@@ -1,12 +1,13 @@
 {
-    "name": "o-log/php-router",
-    "require-dev": {
-      "phpunit/phpunit": "5.2.*"
-    },
-    "autoload" : {
-      "psr-0" : {
-	    "OLOG" : "",
-        "PHPRouterDemo" : ""
-	  }
+  "name": "o-log/php-router",
+  "description": "PHP router built around classes",
+  "require-dev": {
+    "phpunit/phpunit": "5.2.*"
+  },
+  "autoload": {
+    "psr-0": {
+      "OLOG": "",
+      "PHPRouterDemo": ""
     }
+  }
 }
