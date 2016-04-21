@@ -8,7 +8,7 @@ class DemoMainPageAction
         return '/';
     }
     
-    static public function action(){
+    public function action(){
         DemoMainPageTemplate::render();
     }
 }
