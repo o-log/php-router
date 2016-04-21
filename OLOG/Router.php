@@ -399,11 +399,18 @@ class Router
 
     }
 
+    /**
+     * @deprecated 
+     * @return mixed
+     */
     static public function uri_no_getform()
     {
+        /*
         $request_uri = array_key_exists('REQUEST_URI', $_SERVER) ? $_SERVER['REQUEST_URI'] : '';
         $parts = explode('?', $request_uri);
         $uri_no_getform = $parts[0];
         return $uri_no_getform;
+        */
+        return Url::getCurrentUrlNoGetForm();
     }
 }
