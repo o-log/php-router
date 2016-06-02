@@ -5,7 +5,7 @@
     "phpunit/phpunit": "4.8.*"
   },
   "require": {
-    "o-log/php-lib": "1"
+    "o-log/php-lib": "1.*"
   },
   "autoload": {
     "psr-0": {
