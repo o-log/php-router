@@ -5,6 +5,7 @@ class RouterTest extends PHPUnit_Framework_TestCase
 
     // TODO: test matchClass
 
+    /*
     static public function mainPageAction($_mode){
         if ($_mode == \OLOG\Router::GET_URL) return '/';
         if ($_mode == \OLOG\Router::GET_METHOD) return __METHOD__;
@@ -30,7 +31,7 @@ class RouterTest extends PHPUnit_Framework_TestCase
     {
         $_SERVER['REQUEST_URI'] = '/';
 
-        $action_result = \OLOG\Router::match3(self::mainPageAction(\OLOG\Router::GET_METHOD), 0, true);
+        $action_result = \OLOG\Router::matchAction(self::mainPageAction, 0, true);
         $this->assertEquals('MAIN_ACTION_DONE', $action_result);
 
         $action_result = \OLOG\Router::match3(self::nodePageAction(\OLOG\Router::GET_METHOD), 0, true);
@@ -79,4 +80,5 @@ class RouterTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(false, $action_result);
 
     }
+    */
 }
