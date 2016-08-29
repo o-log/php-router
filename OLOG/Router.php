@@ -38,182 +38,11 @@ class Router
         return self::$current_action_obj;
     }
 
-    /*
-    static public function getCurrentActionMethodName()
-    {
-        return self::$current_action_method_name;
-    }
-
-    static public function getCurrentControllerClassName()
-    {
-        return self::$current_controller_class_name;
-    }
-    */
-
     protected static function getDefaultCacheLifetime()
     {
-      /*
-        $has_admin_cookie = false;
-
-        if ($has_admin_cookie) {
-            $cache_seconds_for_headers = 0;
-        } else {
-            $cache_seconds_for_headers = \OLOG\ConfWrapper::value('cache_life_time', 60);
-        }
-
-        return $cache_seconds_for_headers;
-      */
       return 60;
     }
 
-    /**
-     * Простой роутинг, когда маска урла передается напрямую в роутер. Экшен указывается в виде стандартного callable.
-     * Здесь контроллер инстанцируется, экшены не статические.
-     * - Декодирует все параметры, полученные из урла.
-     * - Экшен должен вернуть CONTINUE_ROUTING если не смог обработать запрос (не подошел). Если обработал - может ничего не возвращать.
-     * @param $url_regexp
-     * @param $callback_arr
-     * @param null $cache_seconds_for_headers
-     */
-    /*
-    static public function match($url_regexp, callable $callback_arr, $cache_seconds_for_headers = null)
-    {
-        list($controller_class_name, $action_method_name) = $callback_arr;
-
-        $matches_arr = array();
-        $current_url = self::uri_no_getform();
-
-        if (!preg_match($url_regexp, $current_url, $matches_arr)) {
-            return;
-        }
-
-        if (count($matches_arr)) {
-            // убираем первый элемент массива - содержит всю сматченую строку
-            array_shift($matches_arr);
-        }
-
-        // кэширование страницы по умолчанию
-        if (is_null($cache_seconds_for_headers)) {
-            $cache_seconds_for_headers = self::getDefaultCacheLifetime();
-        }
-        self::cacheHeaders($cache_seconds_for_headers);
-
-        $decoded_matches_arr = array();
-        foreach ($matches_arr as $arg_value) {
-            $decoded_matches_arr[] = urldecode($arg_value);
-        }
-
-        self::$current_action_method_name = $action_method_name;
-        self::$current_controller_class_name = $controller_class_name;
-
-        self::$current_action_obj = new $controller_class_name();
-        $action_result = call_user_func_array(array(self::$current_action_obj, $action_method_name), $decoded_matches_arr);
-
-        if ($action_result == null) {
-            exit;
-        }
-
-        if ($action_result != self::CONTINUE_ROUTING) {
-            exit;
-        }
-
-        // сбрасываем текущий контроллер - он больше не актуален
-        self::$current_action_obj = null;
-        self::$current_action_method_name = null;
-        self::$current_controller_class_name = null;
-    }
-    */
-
-    /**
-     * Сложный вариант роутинга - маска урла хранится в экшене и получается из него. Экшен здесь передается как callable.
-     * Здесь контроллер не инстанцируется, методы экшенов статические.
-     * @param callable $method
-     * @param null $cache_seconds_for_headers
-     * @return bool|mixed если маска адреса не матчится - возвращает false, иначе - возвращает то, что вернул экшен. это сделано для тестов.
-     */
-    /*
-    static public function match3(callable $method, $cache_seconds_for_headers = null, $return_action_result_instead_of_exit = false)
-    {
-        //
-        // получение маски адреса экшена вызовом самого экшена
-        //
-
-        $url_str = call_user_func_array($method, array(self::GET_URL));
-        $url_regexp = '@^' . $url_str . '$@';
-
-        //
-        // проверка соответствия запрошенного адреса маске экшена и извлечение параметров экшена
-        //
-
-        $matches_arr = array();
-        $current_url = self::uri_no_getform();
-
-        if (!preg_match($url_regexp, $current_url, $matches_arr)) {
-            return false;
-        }
-
-        if (count($matches_arr)) {
-            array_shift($matches_arr); // убираем первый элемент массива - содержит всю сматченую строку
-        }
-
-        //
-        // установка хидеров кэширования
-        //
-
-        if (is_null($cache_seconds_for_headers)) { // кэширование страницы по умолчанию
-            $cache_seconds_for_headers = self::getDefaultCacheLifetime();
-        }
-
-        self::cacheHeaders($cache_seconds_for_headers);
-
-        //
-        // декодирование параметров экшена, полученных из урла
-        //
-
-        $decoded_matches_arr = array();
-        foreach ($matches_arr as $arg_value) {
-            $decoded_matches_arr[] = urldecode($arg_value);
-        }
-
-        //
-        // сохранение текущего контроллера и экшена, чтобы другой код мог их использовать для проверки какой экшен работает или для получения контекста с помощью методов контроллера
-        //
-
-        list($controller_class_name, $action_method_name) = explode('::', $method);
-        self::$current_action_method_name = $method;
-        self::$current_controller_class_name = $controller_class_name;
-
-        $action_params_arr = array_merge(array(self::EXECUTE_ACTION), $decoded_matches_arr); // добавляем mode для экшена
-        $action_result = call_user_func_array($method, $action_params_arr);
-
-        //
-        // сбрасываем текущий контроллер - он больше не актуален
-        //
-
-        //self::$current_controller_obj = null;
-        self::$current_action_method_name = null;
-        self::$current_controller_class_name = null;
-
-        //
-        // проверка результата экшена - нужно ли завершать работу
-        //
-
-        //if ($action_result == null) {
-        //    exit;
-        //}
-
-        if ($action_result === self::CONTINUE_ROUTING) {
-            return $action_result;
-
-        }
-
-        if ($return_action_result_instead_of_exit) {
-            return $action_result;
-        }
-
-        exit;
-    }
-    */
 
     /**
      * @deprecated
@@ -287,6 +116,80 @@ class Router
         //self::$current_controller_obj = null;
         //self::$current_action_method_name = null;
         //self::$current_controller_class_name = null;
+
+        //
+        // проверка результата экшена - нужно ли завершать работу
+        //
+
+        if ($action_result === self::CONTINUE_ROUTING) {
+            return $action_result;
+
+        }
+
+        if ($return_action_result_instead_of_exit) {
+            return $action_result;
+        }
+
+        exit;
+    }
+
+    static public function processAction($action_class_name, $cache_seconds_for_headers = 60, $return_action_result_instead_of_exit = false)
+    {
+        // TODO: check InterfaceAction
+
+        // создаем объект экшена без контекста, чтобы получить из него маску адреса
+        $action_obj = new $action_class_name;
+
+        // url_perfix позволяет работать в папке
+        $url_str = self::$url_prefix . $action_obj->url();
+        $url_regexp = '@^' . $url_str . '$@';
+
+        //
+        // проверка соответствия запрошенного адреса маске экшена и извлечение параметров экшена
+        //
+
+        $matches_arr = array();
+        $current_url = Url::getCurrentUrlNoGetForm();
+
+        if (!preg_match($url_regexp, $current_url, $matches_arr)) {
+            return false;
+        }
+
+        if (count($matches_arr)) {
+            array_shift($matches_arr); // убираем первый элемент массива - содержит всю сматченую строку
+        }
+
+        //
+        // установка хидеров кэширования
+        //
+
+        self::cacheHeaders($cache_seconds_for_headers);
+
+        //
+        // декодирование параметров экшена, полученных из урла
+        //
+
+        $decoded_matches_arr = array();
+        foreach ($matches_arr as $arg_value) {
+            $decoded_matches_arr[] = urldecode($arg_value);
+        }
+
+        //
+        // создание объекта экшена и вызов метода action
+        //
+
+        //$action_obj = new $action_class_name($decoded_matches_arr);
+        $reflect  = new \ReflectionClass($action_class_name);
+        $action_obj = $reflect->newInstanceArgs($decoded_matches_arr);
+
+        self::$current_action_obj = $action_obj;
+        $action_result = $action_obj->action();
+
+        //
+        // TODO: сбрасываем текущий экшен - он больше не актуален
+        //
+
+        self::$current_action_obj = null;
 
         //
         // проверка результата экшена - нужно ли завершать работу
@@ -405,12 +308,6 @@ class Router
      */
     static public function uri_no_getform()
     {
-        /*
-        $request_uri = array_key_exists('REQUEST_URI', $_SERVER) ? $_SERVER['REQUEST_URI'] : '';
-        $parts = explode('?', $request_uri);
-        $uri_no_getform = $parts[0];
-        return $uri_no_getform;
-        */
         return Url::getCurrentUrlNoGetForm();
     }
 }
