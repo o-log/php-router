@@ -11,8 +11,6 @@ class Router
     const EXECUTE_ACTION = 'EXECUTE_ACTION';
 
     static protected $current_action_obj = null; // текущий (т.е. последний созданный) объект экшена
-    //static protected $current_action_method_name = ''; // имя функции текущего (т.е. последнего вызванного) экшена (без класса)
-    //static protected $current_controller_class_name = ''; // имя класса текущего (т.е. последнего вызванного) контроллера
 
     // TODO: describe, add getter+setter
     static $url_prefix = '';
