@@ -133,13 +133,14 @@ class Router
 
     static public function processAction($action_class_name, $cache_seconds_for_headers = 60, $return_action_result_instead_of_exit = false)
     {
-        // TODO: check InterfaceAction
+        CheckClassInterfaces::exceptionIfClassNotImplementsInterface($action_class_name, InterfaceAction::class);
 
         // создаем объект экшена без контекста, чтобы получить из него маску адреса
-        $action_obj = new $action_class_name;
+        /** @var InterfaceAction $dummy_action_obj */
+        $dummy_action_obj = new $action_class_name;
 
         // url_perfix позволяет работать в папке
-        $url_str = self::$url_prefix . $action_obj->url();
+        $url_str = self::$url_prefix . $dummy_action_obj->url();
         $url_regexp = '@^' . $url_str . '$@';
 
         //

@@ -2,7 +2,10 @@
 
 namespace PHPRouterDemo;
 
-class DemoTermAction
+use OLOG\InterfaceAction;
+
+class DemoTermAction implements
+    InterfaceAction
 {
     protected $term_id;
 
