@@ -1,5 +1,44 @@
 # Пример использования
 
+Вот пример класса экшена:
+
+    <?php
+    
+    namespace PHPRouterDemo;
+    
+    use OLOG\InterfaceAction;
+    
+    class DemoTermAction implements InterfaceAction
+    {
+        protected $term_id;
+    
+        public function __construct($term_id = '(\d+)')
+        {
+            $this->term_id = $term_id;
+        }
+    
+        public function url(){
+            $term_id = $this->term_id;
+            return '/term/' . $term_id;
+        }
+    
+        public function action(){
+            echo '<div>TERM ' . $this->term_id . '</div>';
+        }
+    }
+
+Здесь есть:
+- конструктор, который принимает контекст экшена (например, идентификатор объекта, который надо вывести на страницу)
+- метод url(), который возвращает адрес страницы экшена или маску адреса для роутинга
+- метод action(), который генерирует страницу
+Класс экшена должен имплементить интерфейс InterfaceAction.
+
+Для того, чтобы вывести ссылку на страницу этого экшена, нужно создать объект экшена (передав конструктору контекст) и вызвать метод url() этого объекта. Например вот так:
+
+    (new DemoTermAction(3))->url()
+
+# Пример использования (старое)
+
 Пример класса экшена, который выводит страницу объекта с идентификатором node_id:
 
     class NodeAction
