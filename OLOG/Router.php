@@ -154,16 +154,23 @@ class Router
         } else {
 
             //
-            // экшен не умеет сам проверять его ли это урл и получать контекст из урла, получаем из него маску адреса и матчим с запрошенным урлом
+            // экшен не умеет сам проверять его ли это урл и получать контекст из урла
+            // поэтому получаем из экшена маску адреса и матчим с запрошенным урлом
             //
 
-            // создаем объект экшена без контекста, чтобы получить из него маску адреса
-            /** @var InterfaceAction $dummy_action_obj */
-            $dummy_action_obj = new $action_class_name;
+            $url_regexp = '';
 
-            // url_perfix позволяет работать в папке
-            $url_str = self::$url_prefix . $dummy_action_obj->url();
-            $url_regexp = '@^' . $url_str . '$@';
+            if (method_exists($action_class_name, 'urlMask')){
+                $url_regexp = '@^' . $action_class_name::urlMask() . '$@';
+            } else {
+                // создаем объект экшена без контекста, чтобы получить из него маску адреса через метод url()
+                /** @var InterfaceAction $dummy_action_obj */
+                $dummy_action_obj = new $action_class_name;
+
+                // url_perfix позволяет работать в папке
+                $url_str = self::$url_prefix . $dummy_action_obj->url();
+                $url_regexp = '@^' . $url_str . '$@';
+            }
 
             //
             // проверка соответствия запрошенного адреса маске экшена и извлечение параметров экшена

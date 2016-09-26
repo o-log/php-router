@@ -2,17 +2,27 @@
 
 namespace PHPRouterDemo;
 
-class DemoNodeAction
+use OLOG\InterfaceAction;
+
+class DemoNodeAction implements InterfaceAction
 {
     protected $node_id;
 
-    static public function getUrl($node_id = '(\d+)'){
-        return '/node/' . $node_id;
-    }
-    
-    public function action($node_id){
+    public function __construct($node_id)
+    {
         $this->node_id = $node_id;
-        DemoNodePageTemplate::render($node_id, $this);
+    }
+
+    static public function urlMask(){
+        return '/node/(\d+)';
+    }
+
+    public function url(){
+        return '/node/' . $this->node_id;
+    }
+
+    public function action(){
+        DemoNodePageTemplate::render($this->node_id, $this);
     }
 
     public function getH1(){

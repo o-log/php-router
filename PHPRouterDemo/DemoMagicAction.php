@@ -49,6 +49,7 @@ class DemoMagicAction implements InterfaceAction, InterfaceGetActionObjForUrl
     {
         echo '<h1><a href="' . DemoMainPageAction::getUrl() . '">Main page</a> / Magic</h1>';
         echo '<div>MAGIC NAME: ' . $this->magic_name . '</div>';
+        echo '<div>Add something to url to see how the action extracts parameters.</div>';
     }
 
     /**
