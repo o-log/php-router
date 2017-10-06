@@ -6,8 +6,8 @@ require_once '../vendor/autoload.php';
 
 use OLOG\Router;
 
-Router::matchAction(\PHPRouterDemo\DemoMainPageAction::class, 0);
-Router::processAction(\PHPRouterDemo\DemoNodeAction::class, 0);
+Router::action(\PHPRouterDemo\DemoMainPageAction::class, 0);
+Router::action(\PHPRouterDemo\DemoNodeAction::class, 0);
 
-Router::processAction(\PHPRouterDemo\DemoTermAction::class);
-Router::processAction(\PHPRouterDemo\DemoMagicAction::class);
+Router::action(\PHPRouterDemo\DemoTermAction::class);
+Router::action(\PHPRouterDemo\DemoMagicAction::class);

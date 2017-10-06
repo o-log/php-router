@@ -2,9 +2,9 @@
 
 namespace PHPRouterDemo;
 
-class DemoMainPageAction
+class DemoMainPageAction implements \OLOG\InterfaceAction
 {
-    static public function getUrl(){
+    public function url(){
         return '/';
     }
     
