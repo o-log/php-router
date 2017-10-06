@@ -87,7 +87,7 @@ class Router {
             return self::NO_MATCH;
         }
 
-        return self::executeAction($action_obj, $cache_seconds_for_headers);
+        return self::execute($action_obj, $cache_seconds_for_headers);
     }
 
     /**
@@ -135,7 +135,7 @@ class Router {
      * @param type $cache_seconds_for_headers
      * @return type
      */
-    static protected function executeAction($action_obj, $cache_seconds_for_headers) {
+    static protected function execute($action_obj, $cache_seconds_for_headers) {
         Assert::assert($action_obj);
         
         self::cacheHeaders($cache_seconds_for_headers);
