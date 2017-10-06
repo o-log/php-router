@@ -5,7 +5,8 @@ namespace OLOG;
 class Router {
     const NO_MATCH = 'NO_MATCH';
 
-    static protected $current_action = null; // текущий (т.е. последний созданный) объект экшена
+    // текущий (т.е. последний созданный) объект экшена
+    static protected $current_action = null;
 
     // TODO: describe, add getter+setter
     // url_perfix позволяет работать в папке
@@ -27,11 +28,17 @@ class Router {
         return true;
     }
 
+    /**
+     * Можно получить текущий экшен в любом месте кода и прочитать из него
+     * контекст, проверить что за экшен сейчас работает, получить из экшена
+     * дополнительные данные и т.п.
+     * @return type
+     */
     static public function currentAction() {
         return self::$current_action;
     }
 
-    protected static function getDefaultCacheLifetime(): int {
+    protected static function defaultCacheSeconds(): int {
         return 60;
     }
 
@@ -70,7 +77,6 @@ class Router {
             /** @var SimpleActionInterface $dummy_action_obj */
             $dummy_action_obj = new $action_class_name;
             $url_regexp = '@^' . self::$url_prefix . $dummy_action_obj->url() . '$@';
-            
             $action_obj = self::match($action_class_name, $current_url, $url_regexp);
         } else {
             throw new \Exception('Action class ' . $action_class_name . ' does not implement action interfaces.');
