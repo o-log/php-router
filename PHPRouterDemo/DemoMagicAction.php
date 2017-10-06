@@ -2,8 +2,7 @@
 
 namespace PHPRouterDemo;
 
-use OLOG\InterfaceAction;
-use OLOG\InterfaceGetActionObjForUrl;
+use OLOG\ParseActionInterface;
 
 /**
  * Class DemoMagicAction
@@ -13,7 +12,7 @@ use OLOG\InterfaceGetActionObjForUrl;
  *
  * @package PHPRouterDemo
  */
-class DemoMagicAction implements InterfaceAction, InterfaceGetActionObjForUrl
+class DemoMagicAction implements ParseActionInterface
 {
     protected $magic_name;
 
@@ -41,13 +40,13 @@ class DemoMagicAction implements InterfaceAction, InterfaceGetActionObjForUrl
         $this->magic_name = $magic_name;
     }
 
-    public function url(){
+    public function url() : string {
         return '/magic/' . $this->magic_name;
     }
 
     public function action()
     {
-        echo '<h1><a href="' . DemoMainPageAction::getUrl() . '">Main page</a> / Magic</h1>';
+        echo '<h1><a href="' . (new DemoMainPageAction())->url() . '">Main page</a> / Magic</h1>';
         echo '<div>MAGIC NAME: ' . $this->magic_name . '</div>';
         echo '<div>Add something to url to see how the action extracts parameters.</div>';
     }
@@ -56,7 +55,7 @@ class DemoMagicAction implements InterfaceAction, InterfaceGetActionObjForUrl
      * @param $requested_url
      * @return null|DemoMagicAction
      */
-    static public function getActionObjForUrl($requested_url){
+    static public function parse($requested_url) {
         //
         // проверка соответствия запрошенного адреса маске экшена и извлечение параметров экшена
         //

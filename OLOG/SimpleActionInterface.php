@@ -2,8 +2,7 @@
 
 namespace OLOG;
 
-interface InterfaceAction
-{
+interface SimpleActionInterface {
     public function action();
     public function url();
 }

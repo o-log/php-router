@@ -2,24 +2,26 @@
 
 namespace PHPRouterDemo;
 
-use OLOG\InterfaceAction;
+use OLOG\MaskActionInterface;
 
-class DemoTermAction implements
-    InterfaceAction
-{
+class DemoTermAction implements MaskActionInterface {
+
     protected $term_id;
 
-    public function __construct($term_id = '(\d+)')
-    {
+    public function __construct($term_id) {
         $this->term_id = $term_id;
     }
 
-    public function url(){
-        $term_id = $this->term_id;
-        return '/term/' . $term_id;
+    static public function mask() {
+        return '/term/(\d+)';
     }
 
-    public function action(){
+    public function url() {
+        return '/term/' . $this->term_id;
+    }
+
+    public function action() {
         echo '<div>TERM ' . $this->term_id . '</div>';
     }
+
 }

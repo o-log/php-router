@@ -2,23 +2,22 @@
 
 namespace OLOG;
 
-class Router
-{
-    const CONTINUE_ROUTING = 'CONTINUE_ROUTING';
+class Router {
+    const NO_MATCH = 'NO_MATCH';
 
-    /** @var InterfaceAction */
     static protected $current_action = null; // текущий (т.е. последний созданный) объект экшена
 
     // TODO: describe, add getter+setter
+    // url_perfix позволяет работать в папке
     static $url_prefix = '';
 
     /**
-     * Простой метод проверки соответствует ли запрошенный урл указанной маске. Может использоваться для группировки роутов.
+     * Простой метод проверки соответствует ли запрошенный урл указанной маске.
+     * Может использоваться для группировки роутов.
      * @param $url_regexp
      * @return bool
      */
-    static public function group($url_regexp) : bool
-    {
+    static public function group($url_regexp): bool {
         $current_url = Url::getCurrentUrlNoGetForm();
 
         if (!preg_match($url_regexp, $current_url)) {
@@ -28,14 +27,12 @@ class Router
         return true;
     }
 
-    static public function currentAction() : InterfaceAction
-    {
+    static public function currentAction() {
         return self::$current_action;
     }
 
-    protected static function getDefaultCacheLifetime() : int
-    {
-      return 60;
+    protected static function getDefaultCacheLifetime(): int {
+        return 60;
     }
 
     /**
@@ -44,14 +41,11 @@ class Router
      * @param type $cache_seconds_for_headers
      * @return type
      */
-    static public function action($action_class_name, $cache_seconds_for_headers = 60)
-    {
-        $action_result = self::run($action_class_name, $cache_seconds_for_headers);
-        
-        // проверка результата экшена - нужно ли завершать работу
-        if ($action_result === self::CONTINUE_ROUTING) {
-            return $action_result;
+    static public function action($action_class_name, $cache_seconds_for_headers = 60) {
+        $action_result = self::matchAndExecute($action_class_name, $cache_seconds_for_headers);
 
+        if ($action_result === self::NO_MATCH) {
+            return null;
         }
 
         exit;
@@ -63,97 +57,93 @@ class Router
      * @param type $cache_seconds_for_headers
      * @return boolean
      */
-    static public function run($action_class_name, $cache_seconds_for_headers = 60){
-        CheckClassInterfaces::exceptionIfClassNotImplementsInterface($action_class_name, InterfaceAction::class);
-
+    static public function matchAndExecute($action_class_name, $cache_seconds_for_headers = 60) {
         $action_obj = null;
         $current_url = Url::getCurrentUrlNoGetForm();
 
-        if (CheckClassInterfaces::classImplementsInterface($action_class_name, InterfaceGetActionObjForUrl::class)){
-
-            //
-            // экшен умеет сам проверять его ли это урл и получать контекст из урла
-            //
-
-            $action_obj = $action_class_name::getActionObjForUrl($current_url);
-
-            if (is_null($action_obj)){
-                // экшен не умеет обрабатывать этот урл
-                return null;
-            }
+        if (CheckClassInterfaces::classImplementsInterface($action_class_name, ParseActionInterface::class)) {
+            $action_obj = $action_class_name::parse($current_url);
+        } elseif (CheckClassInterfaces::classImplementsInterface($action_class_name, MaskActionInterface::class)) {
+            $url_regexp = '@^' . self::$url_prefix . $action_class_name::mask() . '$@';
+            $action_obj = self::match($action_class_name, $current_url, $url_regexp);
+        } elseif (CheckClassInterfaces::classImplementsInterface($action_class_name, SimpleActionInterface::class)) {
+            /** @var SimpleActionInterface $dummy_action_obj */
+            $dummy_action_obj = new $action_class_name;
+            $url_regexp = '@^' . self::$url_prefix . $dummy_action_obj->url() . '$@';
+            
+            $action_obj = self::match($action_class_name, $current_url, $url_regexp);
         } else {
-
-            //
-            // экшен не умеет сам проверять его ли это урл и получать контекст из урла
-            // поэтому получаем из экшена маску адреса и матчим с запрошенным урлом
-            //
-
-            $url_regexp = '';
-
-            if (method_exists($action_class_name, 'urlMask')){
-                $url_regexp = '@^' . $action_class_name::urlMask() . '$@';
-            } else {
-                // создаем объект экшена без контекста, чтобы получить из него маску адреса через метод url()
-                /** @var InterfaceAction $dummy_action_obj */
-                $dummy_action_obj = new $action_class_name;
-
-                // url_perfix позволяет работать в папке
-                $url_str = self::$url_prefix . $dummy_action_obj->url();
-                $url_regexp = '@^' . $url_str . '$@';
-            }
-
-            //
-            // проверка соответствия запрошенного адреса маске экшена и извлечение параметров экшена
-            //
-
-            $matches_arr = array();
-            if (!preg_match($url_regexp, $current_url, $matches_arr)) {
-                return false;
-            }
-
-            if (count($matches_arr)) {
-                array_shift($matches_arr); // убираем первый элемент массива - содержит всю сматченую строку
-            }
-
-            //
-            // декодирование параметров экшена, полученных из урла
-            //
-
-            $decoded_matches_arr = array();
-            foreach ($matches_arr as $arg_value) {
-                $decoded_matches_arr[] = urldecode($arg_value);
-            }
-
-            //
-            // создание объекта экшена
-            //
-
-            $reflect  = new \ReflectionClass($action_class_name);
-            $action_obj = $reflect->newInstanceArgs($decoded_matches_arr);
+            throw new \Exception('Action class ' . $action_class_name . ' does not implement action interfaces.');
         }
 
+        if (is_null($action_obj)) {
+            // экшен не умеет обрабатывать этот урл
+            return self::NO_MATCH;
+        }
+
+        return self::executeAction($action_obj, $cache_seconds_for_headers);
+    }
+
+    /**
+     * матчим маску адреса с запрошенным урлом
+     * если матчится - возвращает объект экшена, иначе - null
+     * @param type $action_class_name
+     * @param type $current_url
+     * @return 
+     */
+    static protected function match($action_class_name, $current_url, $url_regexp) {
+
+        //
+        // проверка соответствия запрошенного адреса маске экшена и извлечение параметров экшена
+        //
+
+        $matches_arr = array();
+        if (!preg_match($url_regexp, $current_url, $matches_arr)) {
+            return null;
+        }
+
+        if (count($matches_arr)) {
+            array_shift($matches_arr); // убираем первый элемент массива - содержит всю сматченую строку
+        }
+
+        //
+        // декодирование параметров экшена, полученных из урла
+        //
+
+        $decoded_matches_arr = array();
+        foreach ($matches_arr as $arg_value) {
+            $decoded_matches_arr[] = urldecode($arg_value);
+        }
+
+        //
+        // создание объекта экшена
+        //
+
+        $reflect = new \ReflectionClass($action_class_name);
+        return $reflect->newInstanceArgs($decoded_matches_arr);
+    }
+
+    /**
+     * устанавливаем хидеры кэширования и выподняем экшен, возвращаем его результат
+     * @param type $action_obj
+     * @param type $cache_seconds_for_headers
+     * @return type
+     */
+    static protected function executeAction($action_obj, $cache_seconds_for_headers) {
         Assert::assert($action_obj);
-
+        
         self::cacheHeaders($cache_seconds_for_headers);
-
-        //
-        // вызов экшена
-        //
 
         self::$current_action = $action_obj;
         $action_result = $action_obj->action();
 
-        //
         // сбрасываем текущий экшен - он больше не актуален
-        //
-
         self::$current_action = null;
-        
+
         return $action_result;
     }
 
-    static public function cacheHeaders($seconds = 0)
-    {
+    static public function cacheHeaders($seconds = 0) {
         if (php_sapi_name() == "cli") {
             return;
         }

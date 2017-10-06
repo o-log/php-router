@@ -2,9 +2,9 @@
 
 namespace PHPRouterDemo;
 
-use OLOG\InterfaceAction;
+use OLOG\MaskActionInterface;
 
-class DemoNodeAction implements InterfaceAction
+class DemoNodeAction implements MaskActionInterface
 {
     protected $node_id;
 
@@ -13,7 +13,7 @@ class DemoNodeAction implements InterfaceAction
         $this->node_id = $node_id;
     }
 
-    static public function urlMask(){
+    static public function mask(){
         return '/node/(\d+)';
     }
 

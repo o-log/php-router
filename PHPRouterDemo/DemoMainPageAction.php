@@ -2,13 +2,15 @@
 
 namespace PHPRouterDemo;
 
-class DemoMainPageAction implements \OLOG\InterfaceAction
+use OLOG\SimpleActionInterface;
+
+class DemoMainPageAction implements SimpleActionInterface
 {
     public function url(){
         return '/';
     }
     
     public function action(){
-        DemoMainPageTemplate::render();
+        echo \OLOG\Render::callLocaltemplate('main_page.php');
     }
 }

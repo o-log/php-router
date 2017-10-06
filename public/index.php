@@ -1,5 +1,6 @@
 <?php
 
+// no separate config, so place it here
 date_default_timezone_set('Europe/Moscow');
 
 require_once '../vendor/autoload.php';
