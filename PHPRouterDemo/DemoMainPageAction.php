@@ -11,6 +11,6 @@ class DemoMainPageAction implements SimpleActionInterface
     }
     
     public function action(){
-        echo \OLOG\Render::callLocaltemplate('main_page.php');
+        require 'main_page.php';
     }
 }

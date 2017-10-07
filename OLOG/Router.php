@@ -19,7 +19,7 @@ class Router {
      * @return bool
      */
     static public function group($url_regexp): bool {
-        $current_url = Url::getCurrentUrlNoGetForm();
+        $current_url = URL::path();
 
         if (!preg_match($url_regexp, $current_url)) {
             return false;
@@ -66,14 +66,14 @@ class Router {
      */
     static public function matchAndExecute($action_class_name, $cache_seconds_for_headers = 60) {
         $action_obj = null;
-        $current_url = Url::getCurrentUrlNoGetForm();
+        $current_url = URL::path();
 
-        if (CheckClassInterfaces::classImplementsInterface($action_class_name, ParseActionInterface::class)) {
+        if (is_a($action_class_name, ParseActionInterface::class, true)) {
             $action_obj = $action_class_name::parse($current_url);
-        } elseif (CheckClassInterfaces::classImplementsInterface($action_class_name, MaskActionInterface::class)) {
+        } elseif (is_a($action_class_name, MaskActionInterface::class, true)) {
             $url_regexp = '@^' . self::$url_prefix . $action_class_name::mask() . '$@';
             $action_obj = self::match($action_class_name, $current_url, $url_regexp);
-        } elseif (CheckClassInterfaces::classImplementsInterface($action_class_name, SimpleActionInterface::class)) {
+        } elseif (is_a($action_class_name, SimpleActionInterface::class, true)) {
             /** @var SimpleActionInterface $dummy_action_obj */
             $dummy_action_obj = new $action_class_name;
             $url_regexp = '@^' . self::$url_prefix . $dummy_action_obj->url() . '$@';
@@ -136,7 +136,7 @@ class Router {
      * @return type
      */
     static protected function execute($action_obj, $cache_seconds_for_headers) {
-        Assert::assert($action_obj);
+        if (is_null($action_obj)) throw new \Exception; // protection
         
         self::cacheHeaders($cache_seconds_for_headers);
 
