@@ -6,6 +6,7 @@ class Router {
     const NO_MATCH = 'NO_MATCH';
 
     // текущий (т.е. последний созданный) объект экшена
+    /** @var ActionInterface */
     static protected $current_action = null;
 
     // TODO: describe, add getter+setter
@@ -34,7 +35,7 @@ class Router {
      * дополнительные данные и т.п.
      * @return type
      */
-    static public function currentAction() {
+    static public function currentAction(): ActionInterface {
         return self::$current_action;
     }
 
@@ -68,18 +69,20 @@ class Router {
         $action_obj = null;
         $current_url = URL::path();
 
+        if (!is_a($action_class_name, ActionInterface::class, true)) {
+            throw new \Exception('Action class ' . $action_class_name . ' does not implement action interfaces.');
+        }
+        
         if (is_a($action_class_name, ParseActionInterface::class, true)) {
             $action_obj = $action_class_name::parse($current_url);
         } elseif (is_a($action_class_name, MaskActionInterface::class, true)) {
             $url_regexp = '@^' . self::$url_prefix . $action_class_name::mask() . '$@';
             $action_obj = self::match($action_class_name, $current_url, $url_regexp);
-        } elseif (is_a($action_class_name, SimpleActionInterface::class, true)) {
-            /** @var SimpleActionInterface $dummy_action_obj */
+        } else {
+            /** @var ActionInterface */
             $dummy_action_obj = new $action_class_name;
             $url_regexp = '@^' . self::$url_prefix . $dummy_action_obj->url() . '$@';
             $action_obj = self::match($action_class_name, $current_url, $url_regexp);
-        } else {
-            throw new \Exception('Action class ' . $action_class_name . ' does not implement action interfaces.');
         }
 
         if (is_null($action_obj)) {
@@ -135,9 +138,7 @@ class Router {
      * @param type $cache_seconds_for_headers
      * @return type
      */
-    static protected function execute($action_obj, $cache_seconds_for_headers) {
-        if (is_null($action_obj)) throw new \Exception; // protection
-        
+    static protected function execute(ActionInterface $action_obj, $cache_seconds_for_headers) {
         self::cacheHeaders($cache_seconds_for_headers);
 
         self::$current_action = $action_obj;

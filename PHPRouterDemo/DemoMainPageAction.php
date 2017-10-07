@@ -2,9 +2,9 @@
 
 namespace PHPRouterDemo;
 
-use OLOG\SimpleActionInterface;
+use OLOG\ActionInterface;
 
-class DemoMainPageAction implements SimpleActionInterface
+class DemoMainPageAction implements ActionInterface
 {
     public function url(){
         return '/';
