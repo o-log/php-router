@@ -2,8 +2,6 @@
 
 namespace PHPRouterDemo;
 
-use OLOG\Router;
-
 class DemoNodePageTemplate
 {
     static public function render($node_id, $action_obj){

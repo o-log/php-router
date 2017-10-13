@@ -19,7 +19,7 @@ class Router {
      * @param $url_regexp
      * @return bool
      */
-    static public function group($url_regexp): bool {
+    static public function group(string $url_regexp): bool {
         $current_url = URL::path();
 
         if (!preg_match($url_regexp, $current_url)) {
@@ -33,7 +33,6 @@ class Router {
      * Можно получить текущий экшен в любом месте кода и прочитать из него
      * контекст, проверить что за экшен сейчас работает, получить из экшена
      * дополнительные данные и т.п.
-     * @return type
      */
     static public function currentAction(): ActionInterface {
         return self::$current_action;
@@ -45,11 +44,8 @@ class Router {
 
     /**
      * Если указанный класс экшена умеет обрабатывать текущий запрос - выполняет его и делает exit.
-     * @param type $action_class_name
-     * @param type $cache_seconds_for_headers
-     * @return type
      */
-    static public function action($action_class_name, $cache_seconds_for_headers = 60) {
+    static public function action(string $action_class_name ,int $cache_seconds_for_headers = 60) {
         $action_result = self::matchAndExecute($action_class_name, $cache_seconds_for_headers);
 
         if ($action_result === self::NO_MATCH) {
@@ -61,25 +57,23 @@ class Router {
 
     /**
      * Если указанный класс экшена умеет обрабатывать текущий запрос - выполняет его и возвращает результат.
-     * @param type $action_class_name
-     * @param type $cache_seconds_for_headers
-     * @return boolean
      */
-    static public function matchAndExecute($action_class_name, $cache_seconds_for_headers = 60) {
-        $action_obj = null;
-        $current_url = URL::path();
-
+    static public function matchAndExecute(string $action_class_name, int $cache_seconds_for_headers = 60) {
         if (!is_a($action_class_name, ActionInterface::class, true)) {
             throw new \Exception('Action class ' . $action_class_name . ' does not implement action interfaces.');
         }
-        
+
+        /** @var $action_obj ActionInterface */
+        $action_obj = null;
+        $current_url = URL::path();
+
         if (is_a($action_class_name, ParseActionInterface::class, true)) {
             $action_obj = $action_class_name::parse($current_url);
         } elseif (is_a($action_class_name, MaskActionInterface::class, true)) {
             $url_regexp = '@^' . self::$url_prefix . $action_class_name::mask() . '$@';
             $action_obj = self::match($action_class_name, $current_url, $url_regexp);
         } else {
-            /** @var ActionInterface */
+            /** @var $dummy_action_obj ActionInterface */
             $dummy_action_obj = new $action_class_name;
             $url_regexp = '@^' . self::$url_prefix . $dummy_action_obj->url() . '$@';
             $action_obj = self::match($action_class_name, $current_url, $url_regexp);
@@ -96,11 +90,8 @@ class Router {
     /**
      * матчим маску адреса с запрошенным урлом
      * если матчится - возвращает объект экшена, иначе - null
-     * @param type $action_class_name
-     * @param type $current_url
-     * @return 
      */
-    static protected function match($action_class_name, $current_url, $url_regexp) {
+    static protected function match(string $action_class_name, string $current_url, string $url_regexp) {
 
         //
         // проверка соответствия запрошенного адреса маске экшена и извлечение параметров экшена
@@ -134,11 +125,8 @@ class Router {
 
     /**
      * устанавливаем хидеры кэширования и выподняем экшен, возвращаем его результат
-     * @param type $action_obj
-     * @param type $cache_seconds_for_headers
-     * @return type
      */
-    static protected function execute(ActionInterface $action_obj, $cache_seconds_for_headers) {
+    static protected function execute(ActionInterface $action_obj, int $cache_seconds_for_headers) {
         self::cacheHeaders($cache_seconds_for_headers);
 
         self::$current_action = $action_obj;
@@ -150,7 +138,7 @@ class Router {
         return $action_result;
     }
 
-    static public function cacheHeaders($seconds = 0) {
+    static public function cacheHeaders(int $seconds = 0) {
         if (php_sapi_name() == "cli") {
             return;
         }

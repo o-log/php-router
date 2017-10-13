@@ -55,7 +55,7 @@ class DemoMagicAction implements ParseActionInterface
      * @param $requested_url
      * @return null|DemoMagicAction
      */
-    static public function parse($requested_url) {
+    static public function parse(string $requested_url) {
         //
         // проверка соответствия запрошенного адреса маске экшена и извлечение параметров экшена
         //
