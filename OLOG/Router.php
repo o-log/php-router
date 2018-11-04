@@ -3,8 +3,6 @@
 namespace OLOG;
 
 class Router {
-    const NO_MATCH = 'NO_MATCH';
-
     // текущий (т.е. последний созданный) объект экшена
     /** @var ActionInterface */
     static protected $current_action = null;
@@ -44,21 +42,44 @@ class Router {
 
     /**
      * Если указанный класс экшена умеет обрабатывать текущий запрос - выполняет его и делает exit.
+     * Иначе - возвращает null
      */
-    static public function action(string $action_class_name ,int $cache_seconds_for_headers = 60) {
-        $action_result = self::matchAndExecute($action_class_name, $cache_seconds_for_headers);
+    static public function action(string $action_class_name, int $cache_seconds_for_headers = 60) {
+        $action_obj = self::actionObj($action_class_name);
 
-        if ($action_result === self::NO_MATCH) {
+        if (!$action_obj) {
             return null;
         }
 
+        self::execute($action_obj, $cache_seconds_for_headers);
         exit;
     }
 
     /**
-     * Если указанный класс экшена умеет обрабатывать текущий запрос - выполняет его и возвращает результат.
+     * Если указанный класс экшена умеет обрабатывать текущий запрос - выполняет его и делает exit.
+     * Иначе - возвращает null
      */
-    static public function matchAndExecute(string $action_class_name, int $cache_seconds_for_headers = 60) {
+    static public function post(string $action_class_name, int $cache_seconds_for_headers = 60) {
+        $action_obj = self::actionObj($action_class_name);
+
+        if (!$action_obj) {
+            return null;
+        }
+
+        // проверяем разрешенный метод после того, как убедимся что экшен обрабатывает этот запрос
+        // чтобы вернуть правильный код ошибки
+        if ($_SERVER['REQUEST_METHOD'] != 'POST'){
+            Exits::exit405();
+        }
+
+        self::execute($action_obj, $cache_seconds_for_headers);
+        exit;
+    }
+
+    /**
+     * Если указанный класс экшена умеет обрабатывать текущий запрос - создает и возвращает объект экшена, иначе возвращает null.
+     */
+    static public function actionObj(string $action_class_name): ?ActionInterface {
         if (!is_a($action_class_name, ActionInterface::class, true)) {
             throw new \Exception('Action class ' . $action_class_name . ' does not implement action interfaces.');
         }
@@ -79,12 +100,7 @@ class Router {
             $action_obj = self::match($action_class_name, $current_url, $url_regexp);
         }
 
-        if (is_null($action_obj)) {
-            // экшен не умеет обрабатывать этот урл
-            return self::NO_MATCH;
-        }
-
-        return self::execute($action_obj, $cache_seconds_for_headers);
+        return $action_obj;
     }
 
     /**

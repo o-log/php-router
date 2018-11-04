@@ -5,6 +5,7 @@
     "phpunit/phpunit": "4.8.*"
   },
   "require": {
+    "php" : ">=7.1",
     "o-log/php-http": "0.*"
   },
   "autoload": {

@@ -12,3 +12,5 @@ Router::action(\PHPRouterDemo\DemoNodeAction::class, 0);
 
 Router::action(\PHPRouterDemo\DemoTermAction::class);
 Router::action(\PHPRouterDemo\DemoMagicAction::class);
+
+Router::post(\PHPRouterDemo\DemoPostAction::class);
